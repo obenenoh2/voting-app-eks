@@ -21,7 +21,7 @@ namespace Worker
                 var dbUsername = Environment.GetEnvironmentVariable("DB_USERNAME") ?? "postgres";
                 var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "postgres";
                 var dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? "postgres";
-                
+
                 var redisHost = Environment.GetEnvironmentVariable("REDIS_HOST") ?? "redis";
 
                 // Construct the connection strings
@@ -67,8 +67,9 @@ namespace Worker
                                 pgsql = OpenDbConnection(pgConnectionString);
                             }
                             else
-                            { // Normal +1 vote requested
-                                UpdateVote(pgsql, vote.voter_id, vote.vote);
+                            { 
+                                // Always insert a new vote
+                                InsertVote(pgsql, vote.voter_id, vote.vote);
                             }
                         }
                         else
@@ -117,7 +118,7 @@ namespace Worker
 
             var command = connection.CreateCommand();
             command.CommandText = @"CREATE TABLE IF NOT EXISTS votes (
-                                        id VARCHAR(255) NOT NULL UNIQUE,
+                                        id VARCHAR(255) NOT NULL,
                                         vote VARCHAR(255) NOT NULL
                                     )";
             command.ExecuteNonQuery();
@@ -153,20 +154,21 @@ namespace Worker
                 .First(a => a.AddressFamily == AddressFamily.InterNetwork)
                 .ToString();
 
-        private static void UpdateVote(NpgsqlConnection connection, string voterId, string vote)
+        private static void InsertVote(NpgsqlConnection connection, string voterId, string vote)
         {
             var command = connection.CreateCommand();
             try
             {
+                // Always insert - no unique constraint anymore
                 command.CommandText = "INSERT INTO votes (id, vote) VALUES (@id, @vote)";
                 command.Parameters.AddWithValue("@id", voterId);
                 command.Parameters.AddWithValue("@vote", vote);
                 command.ExecuteNonQuery();
+                Console.WriteLine($"✅ Inserted vote: {voterId} -> {vote}");
             }
-            catch (DbException)
+            catch (DbException ex)
             {
-                command.CommandText = "UPDATE votes SET vote = @vote WHERE id = @id";
-                command.ExecuteNonQuery();
+                Console.WriteLine($"❌ Error inserting vote: {ex.Message}");
             }
             finally
             {

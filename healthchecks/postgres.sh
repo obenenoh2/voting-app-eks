@@ -1,21 +1,17 @@
-#!/bin/bash
-set -eo pipefail
+#!/bin/sh
 
-host="$(hostname -i || echo '127.0.0.1')"
-user="${POSTGRES_USER:-postgres}"
-db="${POSTGRES_DB:-$POSTGRES_USER}"
-export PGPASSWORD="${POSTGRES_PASSWORD:-}"
+# PostgreSQL health check script
+# Checks if PostgreSQL is accepting connections and database is ready
 
-args=(
-	# force postgres to not use the local unix socket (test "external" connectibility)
-	--host "$host"
-	--username "$user"
-	--dbname "$db"
-	--quiet --no-align --tuples-only
-)
+PGUSER="${POSTGRES_USER:-postgres}"
+PGPASSWORD="${POSTGRES_PASSWORD:-postgres}"
+PGDATABASE="${POSTGRES_DB:-postgres}"
 
-if select="$(echo 'SELECT 1' | psql "${args[@]}")" && [ "$select" = '1' ]; then
-	exit 0
+export PGPASSWORD=$PGPASSWORD
+
+# Try to execute a simple query
+if psql -h localhost -U "$PGUSER" -d "$PGDATABASE" -c "SELECT 1" > /dev/null 2>&1; then
+    exit 0
+else
+    exit 1
 fi
-
-exit 1
