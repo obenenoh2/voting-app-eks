@@ -8,8 +8,6 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
     - name: Checkout code
@@ -21,20 +19,29 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
     - name: Build and push Vote image
-      run: |
-        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/vote:latest ./vote
-        docker push ${{ secrets.DOCKERHUB_USERNAME }}/vote:latest
+      uses: docker/build-push-action@v5
+      with:
+        context: ./vote
+        push: true
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/vote:latest
 
     - name: Build and push Result image
-      run: |
-        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/result:latest ./result
-        docker push ${{ secrets.DOCKERHUB_USERNAME }}/result:latest
+      uses: docker/build-push-action@v5
+      with:
+        context: ./result
+        push: true
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/result:latest
 
     - name: Build and push Worker image
-      run: |
-        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/worker:latest ./worker
-        docker push ${{ secrets.DOCKERHUB_USERNAME }}/worker:latest
+      uses: docker/build-push-action@v5
+      with:
+        context: ./worker
+        push: true
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/worker:latest
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
