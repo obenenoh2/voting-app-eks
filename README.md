@@ -155,3 +155,4 @@ This ensures the image is built for the desired platform.
 ---
 ## CI/CD Pipeline
 This pipeline automatically builds and deploys the Voting App to EKS.
+# Updated on Wed Jul 22 02:27:22 CEST 2026
