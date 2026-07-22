@@ -1,0 +1,26 @@
+name: Diagnostic Workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check Node.js version
+      run: |
+        node --version
+        npm --version
+
+    - name: Check environment variables
+      run: |
+        env | grep -i node
+
+    - name: Check installed Node.js packages
+      run: |
+        npm list -g --depth=0
+
+    - name: Check action versions
+      run: |
+        echo "Checking actions/checkout@v4..."
+        npm list -g @actions/core @actions/github 2>/dev/null || echo "Not found"
