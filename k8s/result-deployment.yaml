@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: result
+  labels:
+    app: result
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: result
+  template:
+    metadata:
+      labels:
+        app: result
+    spec:
+      containers:
+      - name: result
+        image: dockersamples/examplevotingapp_result:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: PG_HOST
+          value: "db"
+        - name: PG_USER
+          value: "postgres"
+        - name: PG_PASSWORD
+          value: "postgres"
+        - name: PG_DATABASE
+          value: "postgres"
+        - name: REDIS_HOST
+          value: "redis"
+        - name: PORT
+          value: "80"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: result
+  labels:
+    app: result
+spec:
+  type: ClusterIP
+  selector:
+    app: result
+  ports:
+  - port: 80
+    targetPort: 80
